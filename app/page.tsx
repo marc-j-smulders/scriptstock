@@ -328,18 +328,21 @@ export default function ScriptStockApp() {
               </div>
             ) : (
              pharmacies.map((pharmacy) => {
+  const isSelected = selectedPharmacy?.pharmacy_id === pharmacy.pharmacy_id;
+
   return (
     <div
       key={pharmacy.pharmacy_id}
       onClick={() => {
         setSelectedPharmacy(pharmacy);
-        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14 });
+        map.current?.flyTo({ center: [Number(pharmacy.lng), Number(pharmacy.lat)], zoom: 14 });
       }}
-                    className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-                      isSelected 
-                        ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' 
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
+      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+        isSelected
+          ? 'border-emerald-500 bg-emerald-50/50 shadow-sm'
+          : 'border-slate-200 bg-white hover:border-slate-300'
+      }`}
+    >
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
