@@ -49,13 +49,13 @@ export default function ScriptStockApp() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const popupRef = useRef<mapboxgl.Popup | null>(null);
 
   const [medications, setMedications] = useState<Medication[]>([]);
   const [selectedMedId, setSelectedMedId] = useState<string>('');
   const [pharmacies, setPharmacies] = useState<PharmacyStock[]>([]);
   const [selectedPharmacy, setSelectedPharmacy] = useState<PharmacyStock | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('Loading medications...');
-  const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportStatus, setReportStatus] = useState<'in_stock' | 'low_stock' | 'out_of_stock'>('in_stock');
   const [reportSubmitting, setReportSubmitting] = useState(false);
@@ -98,7 +98,7 @@ export default function ScriptStockApp() {
       p_radius_meters: 50000
     });
 
-  if (error) {
+    if (error) {
       console.error('Error fetching stock:', error);
     } else if (data) {
       console.log('PHARMACY DATA FROM RPC:', data);
@@ -114,9 +114,8 @@ export default function ScriptStockApp() {
 
   // 3. Initialize Mapbox Map
   useEffect(() => {
-    if (map.current) return;
+    if (map.current || !mapContainer.current) return;
 
-    // Force-inject Mapbox CSS if not present
     if (!document.getElementById('mapbox-css')) {
       const link = document.createElement('link');
       link.id = 'mapbox-css';
@@ -126,15 +125,16 @@ export default function ScriptStockApp() {
     }
 
     map.current = new mapboxgl.Map({
-      container: mapContainer.current!,
+      container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [149.1824, -21.1416], // [lng, lat]
       zoom: 12,
     });
-    
-    // ... rest of map setup
 
-// 4. Update Map Markers & Direct Click Popup
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+  }, []);
+
+  // 4. Update Map Markers & Direct Click Popup
   useEffect(() => {
     if (!map.current) return;
 
@@ -207,16 +207,16 @@ export default function ScriptStockApp() {
         if (popupRef.current) popupRef.current.remove();
 
         popupRef.current = new mapboxgl.Popup({ offset: 20, closeButton: true })
-          .setLngLat([pharmacy.lng, pharmacy.lat])
+          .setLngLat([Number(pharmacy.lng), Number(pharmacy.lat)])
           .setHTML(popupHtml)
           .addTo(map.current!);
 
-       map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14, speed: 1.2 });
+        map.current?.flyTo({ center: [Number(pharmacy.lng), Number(pharmacy.lat)], zoom: 14, speed: 1.2 });
       };
 
-       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-  .setLngLat([Number(pharmacy.lng), Number(pharmacy.lat)]) // Must be [lng, lat]
-  .addTo(map.current!);
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([Number(pharmacy.lng), Number(pharmacy.lat)])
+        .addTo(map.current!);
 
       markersRef.current.push(marker);
     });
@@ -332,23 +332,22 @@ export default function ScriptStockApp() {
                 No pharmacy stock reported yet.
               </div>
             ) : (
-             pharmacies.map((pharmacy) => {
-  const isSelected = selectedPharmacy?.pharmacy_id === pharmacy.pharmacy_id;
+              pharmacies.map((pharmacy) => {
+                const isSelected = selectedPharmacy?.pharmacy_id === pharmacy.pharmacy_id;
 
-  return (
-    <div
-      key={pharmacy.pharmacy_id}
-      onClick={() => {
-        setSelectedPharmacy(pharmacy);
-        map.current?.flyTo({ center: [Number(pharmacy.lng), Number(pharmacy.lat)], zoom: 14 });
-      }}
-      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-        isSelected
-          ? 'border-emerald-500 bg-emerald-50/50 shadow-sm'
-          : 'border-slate-200 bg-white hover:border-slate-300'
-      }`}
-    >
-                  
+                return (
+                  <div
+                    key={pharmacy.pharmacy_id}
+                    onClick={() => {
+                      setSelectedPharmacy(pharmacy);
+                      map.current?.flyTo({ center: [Number(pharmacy.lng), Number(pharmacy.lat)], zoom: 14 });
+                    }}
+                    className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50/50 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h2 className="font-bold text-slate-900 text-sm">{pharmacy.pharmacy_name}</h2>
