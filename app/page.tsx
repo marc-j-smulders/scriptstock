@@ -121,10 +121,6 @@ export default function ScriptStockApp() {
       center: [149.1868, -21.1415],
       zoom: 12
     });
-map.current.on('click', (e) => {
-  console.log(`LAT: ${e.lngLat.lat.toFixed(5)}, LNG: ${e.lngLat.lng.toFixed(5)}`);
-  alert(`Clicked Coordinates:\nLat: ${e.lngLat.lat.toFixed(5)}\nLng: ${e.lngLat.lng.toFixed(5)}`);
-});
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
@@ -213,7 +209,7 @@ map.current.on('click', (e) => {
        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14, speed: 1.2 });
       };
 
-      const marker = new mapboxgl.Marker({ element: el })
+       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
   .setLngLat([Number(pharmacy.lng), Number(pharmacy.lat)]) // Must be [lng, lat]
   .addTo(map.current!);
 
