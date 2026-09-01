@@ -126,27 +126,45 @@ export default function ScriptStockApp() {
     });
   }, []);
 
-  // 4. Update Map Markers
+ // 4. Update Map Markers
   useEffect(() => {
     if (!map.current) return;
 
+    // Clear existing markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
     pharmacies.forEach((pharmacy) => {
+      // Determine marker color based on status
       let markerColor = '#94a3b8';
       if (pharmacy.latest_status === 'in_stock') markerColor = '#10b981';
       if (pharmacy.latest_status === 'low_stock') markerColor = '#f59e0b';
       if (pharmacy.latest_status === 'out_of_stock') markerColor = '#ef4444';
 
+      // Create pin container element
       const el = document.createElement('div');
-      el.className = 'cursor-pointer transform transition-transform duration-200 hover:scale-125';
+      el.className = 'custom-marker';
+      el.style.width = '32px';
+      el.style.height = '32px';
+      el.style.borderRadius = '50%';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.cursor = 'pointer';
+      el.style.backgroundColor = markerColor;
+      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+      el.style.border = '2px solid white';
+      el.style.transition = 'transform 0.2s ease';
+
+      // SVG pill capsule icon inside the marker
       el.innerHTML = `
-        <div style="background-color: ${markerColor};" class="w-8 h-8 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-xs font-bold">
-          ℞
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" fill="rgba(255, 255, 255, 0.2)" />
+          <path d="m8.5 8.5 7 7" />
+        </svg>
       `;
 
+      // Click to select pharmacy and center map
       el.addEventListener('click', () => {
         setSelectedPharmacy(pharmacy);
         map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14 });
