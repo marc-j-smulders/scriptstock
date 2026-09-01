@@ -1,9 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
 
-// Replace with your real keys
-const SUPABASE_URL = 'https://iocmdecozfcduiwqpteq.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = 'sb_publishable_Wa5HcgFkmTwllsZFZrQrVw_nlg-zXzh';
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibXNtdWxkZXJzIiwiYSI6ImNtdGg0aWtsMTF5MXQyeHB5aTVsc2EyN3kifQ.Ke3MWlpuLs-dFvHq1pV70A'; // starts with pk.ey...
+// Automatically parse .env.local file
+const envPath = path.resolve(process.cwd(), '.env.local');
+const envConfig = {};
+
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...rest] = trimmed.split('=');
+      if (key && rest) {
+        envConfig[key.trim()] = rest.join('=').trim().replace(/^["']|["']$/g, '');
+      }
+    }
+  });
+}
+
+// Extract credentials
+const SUPABASE_URL = (envConfig.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = envConfig.SUPABASE_SERVICE_ROLE_KEY || envConfig.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const MAPBOX_TOKEN = envConfig.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+if (!SUPABASE_URL || !MAPBOX_TOKEN) {
+  console.error('❌ Error: Missing credentials in .env.local.');
+  console.log('Checked URL:', SUPABASE_URL);
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
