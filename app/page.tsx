@@ -29,17 +29,20 @@ interface Medication {
 }
 
 interface PharmacyStock {
-  pharmacy_id: string;
+  pharmacy_id: number;
   pharmacy_name: string;
   pharmacy_address: string;
-  phone: string | null;
-  distance_km: number;
-  latest_status: 'in_stock' | 'low_stock' | 'out_of_stock' | null;
-  reported_at: string | null;
-  hours_ago: number | null;
-  confidence_tier: 'fresh' | 'moderate' | 'aging' | 'stale' | 'unknown';
+  suburb?: string;
+  postcode?: string;
+  phone?: string;
   lat: number;
   lng: number;
+  latest_status?: string;
+  pack_size?: string;
+  notes?: string;
+  reported_at?: string;
+  hours_ago?: number | null;
+  distance_km?: number | null;
 }
 
 export default function ScriptStockApp() {
@@ -167,7 +170,6 @@ export default function ScriptStockApp() {
       el.style.backgroundColor = markerColor;
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.35)';
       el.style.border = '2px solid #ffffff';
-      el.style.pointerEvents = 'auto';
 
       // SVG pill capsule icon
       el.innerHTML = `
@@ -177,14 +179,14 @@ export default function ScriptStockApp() {
         </svg>
       `;
 
-      // Popup HTML content
+      // Popup HTML content referencing exact type properties
       const popupHtml = `
         <div style="font-family: inherit; padding: 6px 4px; min-width: 160px; color: #0f172a;">
           <div style="font-size: 13px; font-weight: 700; margin-bottom: 2px;">
-            ${pharmacy.pharmacy_name || pharmacy.name}
+            ${pharmacy.pharmacy_name}
           </div>
           <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
-            ${pharmacy.pharmacy_address || pharmacy.address}
+            ${pharmacy.pharmacy_address}
           </div>
           <div style="font-size: 11px;">
             ${statusBadge}
@@ -192,15 +194,13 @@ export default function ScriptStockApp() {
         </div>
       `;
 
-      // Direct click listener that constructs and opens the popup directly onto the map
+      // Click handler
       el.onclick = (e) => {
         e.stopPropagation();
         setSelectedPharmacy(pharmacy);
 
-        // Remove any open popup
         if (popupRef.current) popupRef.current.remove();
 
-        // Create and display new popup
         popupRef.current = new mapboxgl.Popup({ offset: 20, closeButton: true })
           .setLngLat([pharmacy.lng, pharmacy.lat])
           .setHTML(popupHtml)
