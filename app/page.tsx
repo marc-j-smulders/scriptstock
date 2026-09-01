@@ -126,18 +126,18 @@ export default function ScriptStockApp() {
     });
   }, []);
 
- // 4. Update Map Markers with Popups
+// 4. Update Map Markers with Working Popups
   useEffect(() => {
     if (!map.current) return;
 
-    // Clear existing markers
+    // Clear previous markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
     pharmacies.forEach((pharmacy) => {
-      // Determine marker color and label based on status
+      // Determine status color and badge
       let markerColor = '#94a3b8';
-      let statusBadge = '<span style="color: #64748b; font-weight: 600;">Unknown</span>';
+      let statusBadge = '<span style="color: #64748b; font-weight: 700;">Unknown</span>';
 
       if (pharmacy.latest_status === 'in_stock') {
         markerColor = '#10b981';
@@ -150,7 +150,7 @@ export default function ScriptStockApp() {
         statusBadge = '<span style="color: #dc2626; font-weight: 700;">✕ Out of Stock</span>';
       }
 
-      // Create pin element
+      // Marker DOM Element
       const el = document.createElement('div');
       el.className = 'custom-marker';
       el.style.width = '32px';
@@ -161,9 +161,8 @@ export default function ScriptStockApp() {
       el.style.justifyContent = 'center';
       el.style.cursor = 'pointer';
       el.style.backgroundColor = markerColor;
-      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-      el.style.border = '2px solid white';
-      el.style.transition = 'transform 0.2s ease';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      el.style.border = '2px solid #ffffff';
 
       // SVG pill capsule icon
       el.innerHTML = `
@@ -173,31 +172,39 @@ export default function ScriptStockApp() {
         </svg>
       `;
 
-      // Mapbox Popup
-      const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(`
-        <div style="font-family: inherit; padding: 4px; min-width: 140px;">
-          <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
+      // Popup definition
+      const popupHtml = `
+        <div style="font-family: sans-serif; padding: 6px 4px; min-width: 160px; color: #0f172a;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 2px;">
             ${pharmacy.pharmacy_name || pharmacy.name}
           </div>
           <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
             ${pharmacy.pharmacy_address || pharmacy.address}
           </div>
-          <div style="font-size: 11px;">
+          <div style="font-size: 12px; margin-bottom: 2px;">
             ${statusBadge}
           </div>
         </div>
-      `);
+      `;
 
-      // Click to select pharmacy, center map, and open popup
-      el.addEventListener('click', () => {
-        setSelectedPharmacy(pharmacy);
-        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14 });
-      });
+      const popup = new mapboxgl.Popup({
+        offset: 20,
+        closeButton: true,
+        closeOnClick: false,
+        focusAfterOpen: false
+      }).setHTML(popupHtml);
 
-      const marker = new mapboxgl.Marker(el)
+      // Create marker with native popup binding
+      const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([pharmacy.lng, pharmacy.lat])
         .setPopup(popup)
         .addTo(map.current!);
+
+      // Also select the pharmacy in React state when clicked
+      popup.on('open', () => {
+        setSelectedPharmacy(pharmacy);
+        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14, speed: 1.2 });
+      });
 
       markersRef.current.push(marker);
     });
