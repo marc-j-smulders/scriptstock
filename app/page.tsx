@@ -98,9 +98,10 @@ export default function ScriptStockApp() {
       p_radius_meters: 50000
     });
 
-    if (error) {
+  if (error) {
       console.error('Error fetching stock:', error);
     } else if (data) {
+      console.log('PHARMACY DATA FROM RPC:', data);
       setPharmacies(data);
     }
   }, [selectedMedId]);
@@ -113,21 +114,25 @@ export default function ScriptStockApp() {
 
   // 3. Initialize Mapbox Map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (map.current) return;
+
+    // Force-inject Mapbox CSS if not present
+    if (!document.getElementById('mapbox-css')) {
+      const link = document.createElement('link');
+      link.id = 'mapbox-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css';
+      document.head.appendChild(link);
+    }
 
     map.current = new mapboxgl.Map({
-      container: mapContainer.current,
+      container: mapContainer.current!,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [149.1868, -21.1415],
-      zoom: 12
+      center: [149.1824, -21.1416], // [lng, lat]
+      zoom: 12,
     });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    map.current.on('load', () => {
-      map.current?.resize();
-    });
-  }, []);
+    
+    // ... rest of map setup
 
 // 4. Update Map Markers & Direct Click Popup
   useEffect(() => {
