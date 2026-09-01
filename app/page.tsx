@@ -206,12 +206,12 @@ export default function ScriptStockApp() {
           .setHTML(popupHtml)
           .addTo(map.current!);
 
-        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14, speed: 1.2 });
+       map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14, speed: 1.2 });
       };
 
       const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([pharmacy.lng, pharmacy.lat])
-        .addTo(map.current!);
+  .setLngLat([Number(pharmacy.lng), Number(pharmacy.lat)]) // Must be [lng, lat]
+  .addTo(map.current!);
 
       markersRef.current.push(marker);
     });
@@ -327,15 +327,14 @@ export default function ScriptStockApp() {
                 No pharmacy stock reported yet.
               </div>
             ) : (
-              pharmacies.map((pharmacy) => {
-                const isSelected = selectedPharmacy?.pharmacy_id === pharmacy.pharmacy_id;
-                return (
-                  <div
-                    key={pharmacy.pharmacy_id}
-                    onClick={() => {
-                      setSelectedPharmacy(pharmacy);
-                      map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14 });
-                    }}
+             pharmacies.map((pharmacy) => {
+  return (
+    <div
+      key={pharmacy.pharmacy_id}
+      onClick={() => {
+        setSelectedPharmacy(pharmacy);
+        map.current?.flyTo({ center: [pharmacy.lng, pharmacy.lat], zoom: 14 });
+      }}
                     className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
                       isSelected 
                         ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' 
