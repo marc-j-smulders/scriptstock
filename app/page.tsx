@@ -343,7 +343,7 @@ export default function ScriptStockApp() {
           : 'border-slate-200 bg-white hover:border-slate-300'
       }`}
     >
-                  >
+                  
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h2 className="font-bold text-slate-900 text-sm">{pharmacy.pharmacy_name}</h2>
