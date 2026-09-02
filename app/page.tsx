@@ -328,11 +328,27 @@ export default function Home() {
   return (
     <div className="relative flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
       {/* Top Floating App Bar (Mobile only) */}
-      <header className="absolute top-3 left-3 right-16 z-20 md:hidden flex items-center justify-between rounded-xl bg-white/95 px-3 py-2 shadow-md backdrop-blur border border-slate-200/80">
+      <header className="absolute top-3 left-3 right-16 z-20 flex md:hidden items-center justify-between rounded-xl bg-white/95 px-3 py-2 shadow-md backdrop-blur border border-slate-200/80">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-blue-600"></div>
+          {/* Emerald Pill Badge */}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+              <path d="m8.5 8.5 7 7" />
+            </svg>
+          </div>
           <span className="text-sm font-black tracking-tight text-slate-900">ScriptStock</span>
         </div>
+
         <button
           onClick={handleRequestLocation}
           disabled={locating}
@@ -363,7 +379,24 @@ export default function Home() {
         <div className={`border-b border-slate-100 p-4 ${drawerState === 'peek' ? 'hidden md:block' : 'block'}`}>
           <div className="hidden md:flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-600"></div>
+              <div className="flex items-center gap-2.5">
+  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100">
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+      <path d="m8.5 8.5 7 7" />
+    </svg>
+  </div>
+  <h1 className="text-lg font-black tracking-tight text-slate-900">ScriptStock</h1>
+</div>
               <h1 className="text-lg font-black tracking-tight text-slate-900">ScriptStock</h1>
             </div>
 
