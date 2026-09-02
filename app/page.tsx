@@ -56,6 +56,28 @@ function getPharmacyPortalUrl(name: string): string | null {
   return null;
 }
 
+// Helper to evaluate stock report freshness and decay
+function getStockFreshness(hoursAgo: number | null | undefined): {
+  label: string;
+  isStale: boolean;
+} {
+  if (hoursAgo === null || hoursAgo === undefined) {
+    return { label: 'No recent reports', isStale: true };
+  }
+
+  if (hoursAgo === 0) {
+    return { label: 'Just now', isStale: false };
+  }
+
+  if (hoursAgo < 24) {
+    return { label: `${hoursAgo}h ago`, isStale: false };
+  }
+
+  const daysAgo = Math.floor(hoursAgo / 24);
+  return { label: `${daysAgo}d ago`, isStale: true };
+}
+
+
 export default function Home() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -496,38 +518,51 @@ export default function Home() {
               </div>
 
               {/* Status Badge */}
-              <div className="mt-4 rounded-xl bg-slate-50 p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="block text-[10px] font-bold uppercase text-slate-400">
-                      Current Stock
-                    </span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+              {(() => {
+                const freshness = getStockFreshness(selectedPharmacy.hours_ago);
+                return (
+                  <div className="mt-4 rounded-xl bg-slate-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="block text-[10px] font-bold uppercase text-slate-400">
+                          Current Stock
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${
+                              selectedPharmacy.latest_status === 'in_stock'
+                                ? 'bg-emerald-500'
+                                : selectedPharmacy.latest_status === 'low_stock'
+                                ? 'bg-amber-500'
+                                : selectedPharmacy.latest_status === 'out_of_stock'
+                                ? 'bg-rose-500'
+                                : 'bg-slate-400'
+                            }`}
+                          ></span>
+                          <span className="text-xs font-bold capitalize text-slate-800">
+                            {selectedPharmacy.latest_status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+
                       <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          selectedPharmacy.latest_status === 'in_stock'
-                            ? 'bg-emerald-500'
-                            : selectedPharmacy.latest_status === 'low_stock'
-                            ? 'bg-amber-500'
-                            : selectedPharmacy.latest_status === 'out_of_stock'
-                            ? 'bg-rose-500'
-                            : 'bg-slate-400'
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          freshness.isStale
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-slate-200/70 text-slate-700'
                         }`}
-                      ></span>
-                      <span className="text-xs font-bold capitalize text-slate-800">
-                        {selectedPharmacy.latest_status.replace('_', ' ')}
+                      >
+                        <span>🕒</span>
+                        <span>{freshness.label}</span>
                       </span>
                     </div>
-                  </div>
 
-                  {selectedPharmacy.hours_ago !== null && selectedPharmacy.hours_ago !== undefined && (
-                    <span className="text-[11px] font-medium text-slate-500">
-                      {selectedPharmacy.hours_ago === 0
-                        ? 'Just now'
-                        : `${selectedPharmacy.hours_ago}h ago`}
-                    </span>
-                  )}
-                </div>
+                    {freshness.isStale && (
+                      <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                        <span>⚠️</span>
+                        <span>Report is over 24h old and needs verification.</span>
+                      </div>
+                    )}
 
                 {/* Verification row with separate up and down counters */}
                 {selectedPharmacy.report_id && (
@@ -565,7 +600,8 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
+              );
+            })()}
               {selectedPharmacy.notes && (
                 <p className="mt-3 rounded-lg bg-amber-50/60 p-2 text-xs italic text-amber-900 border border-amber-100">
                   “{selectedPharmacy.notes}”
@@ -738,6 +774,24 @@ export default function Home() {
                             <span className="font-semibold text-blue-600">{p.distance_km} km</span>
                           </>
                         )}
+                        {(() => {
+                          const freshness = getStockFreshness(p.hours_ago);
+                          return (
+                            <>
+                              <span>•</span>
+                              <span
+                                className={
+                                  freshness.isStale
+                                    ? 'font-semibold text-amber-600'
+                                    : 'text-slate-400'
+                                }
+                              >
+                                {freshness.isStale ? '⚠️ ' : ''}
+                                {freshness.label}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
