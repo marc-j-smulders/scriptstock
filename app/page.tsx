@@ -72,7 +72,7 @@ export default function Home() {
 
   const [tokenInput, setTokenInput] = useState('');
   const [copiedToken, setCopiedToken] = useState(false);
-
+  const [searchQuery, setSearchQuery] = useState('');
   const handleCopyToken = () => {
     if (!tokenInput.trim()) return;
     navigator.clipboard.writeText(tokenInput.trim());
@@ -348,6 +348,15 @@ export default function Home() {
   }, [pharmacies]);
 
   const selectedMed = medications.find((m) => m.id === selectedMedicationId);
+
+  const filteredPharmacies = pharmacies.filter((p) => {
+  if (!searchQuery.trim()) return true;
+  const q = searchQuery.toLowerCase();
+  const nameMatch = p.pharmacy_name?.toLowerCase().includes(q);
+  const addressMatch = p.address?.toLowerCase().includes(q);
+  return nameMatch || addressMatch;
+});
+
 
   // Dynamic height styling for the drawer on mobile
   const drawerHeightClass = {
@@ -659,13 +668,51 @@ export default function Home() {
             </div>
           )}
 
-          {/* List of Nearby Pharmacies */}
-          <div className="mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Nearby Pharmacies ({pharmacies.length})
-            </h4>
-            <div className="space-y-2 pb-16 md:pb-0">
-              {pharmacies.map((p) => {
+          {/* Search / Filter Bar */}
+            <div className="mt-3 mb-2">
+              <div className="flex items-center justify-between mb-1.5 px-0.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Pharmacies ({filteredPharmacies.length})
+                </span>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search name, brand, or suburb..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-1.5 pl-8 pr-8 text-xs text-slate-800 placeholder-slate-400 transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-xs text-slate-400 hover:text-slate-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          <div className="space-y-2 pb-16 md:pb-0">
+            {filteredPharmacies.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs text-slate-500">
+                No pharmacies match &ldquo;{searchQuery}&rdquo;.
+              </div>
+            ) : (
+              filteredPharmacies.map((p) => {
                 const isSelected = selectedPharmacy?.pharmacy_id === p.pharmacy_id;
                 return (
                   <div
@@ -710,10 +757,11 @@ export default function Home() {
                       ></span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+            );
+      })
+    )}
+  </div>
+
         </div>
       </aside>
 
