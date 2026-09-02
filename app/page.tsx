@@ -138,7 +138,7 @@ export default function Home() {
         p_medication_id: selectedMedicationId,
         p_lat: Number(currentLat),
         p_lng: Number(currentLng),
-        p_radius_meters: 500000,
+        p_radius_meters: 2000000,
       });
 
       if (!error && data) {
@@ -270,6 +270,14 @@ export default function Home() {
       setUserLocation({ lat: e.coords.latitude, lng: e.coords.longitude });
     });
   }, []);
+  
+  const filteredPharmacies = pharmacies.filter((p) => {
+  if (!searchQuery.trim()) return true;
+  const q = searchQuery.toLowerCase();
+  const nameMatch = p.pharmacy_name?.toLowerCase().includes(q);
+  const addressMatch = p.address?.toLowerCase().includes(q);
+  return nameMatch || addressMatch;
+});
 
   // 4. Update markers with pill icons and popups
   useEffect(() => {
@@ -283,7 +291,7 @@ export default function Home() {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
-    pharmacies.forEach((pharmacy) => {
+    filteredPharmacies.forEach((pharmacy) => {
       const lat = Number(pharmacy.lat);
       const lng = Number(pharmacy.lng);
       if (isNaN(lat) || isNaN(lng)) return;
@@ -367,17 +375,10 @@ export default function Home() {
 
       markersRef.current.push(marker);
     });
-  }, [pharmacies]);
+ }, [filteredPharmacies]);
 
   const selectedMed = medications.find((m) => m.id === selectedMedicationId);
 
-  const filteredPharmacies = pharmacies.filter((p) => {
-  if (!searchQuery.trim()) return true;
-  const q = searchQuery.toLowerCase();
-  const nameMatch = p.pharmacy_name?.toLowerCase().includes(q);
-  const addressMatch = p.address?.toLowerCase().includes(q);
-  return nameMatch || addressMatch;
-});
 
 
   // Dynamic height styling for the drawer on mobile
