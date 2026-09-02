@@ -35,6 +35,27 @@ interface PharmacyStockItem {
 
 type DrawerState = 'peek' | 'half' | 'full';
 
+// Helper to route users to official dispensary order portals based on pharmacy brand
+function getPharmacyPortalUrl(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes('chemist warehouse')) {
+    return 'https://www.chemistwarehouse.com.au/prescriptions';
+  }
+  if (lower.includes('terrywhite') || lower.includes('terry white')) {
+    return 'https://www.terrywhitechemmart.com.au/services/scripts';
+  }
+  if (lower.includes('priceline')) {
+    return 'https://www.priceline.com.au/pharmacy-services';
+  }
+  if (lower.includes('amcal')) {
+    return 'https://www.amcal.com.au/scripts';
+  }
+  if (lower.includes('blooms')) {
+    return 'https://www.blooms.net.au/prescriptions';
+  }
+  return null;
+}
+
 export default function Home() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -48,6 +69,16 @@ export default function Home() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [votedReportIds, setVotedReportIds] = useState<Record<number, 'up' | 'down'>>({});
+
+  const [tokenInput, setTokenInput] = useState('');
+  const [copiedToken, setCopiedToken] = useState(false);
+
+  const handleCopyToken = () => {
+    if (!tokenInput.trim()) return;
+    navigator.clipboard.writeText(tokenInput.trim());
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2500);
+  };
   
   // Mobile drawer state
   const [drawerState, setDrawerState] = useState<DrawerState>('half');
@@ -530,6 +561,88 @@ export default function Home() {
                 <p className="mt-3 rounded-lg bg-amber-50/60 p-2 text-xs italic text-amber-900 border border-amber-100">
                   “{selectedPharmacy.notes}”
                 </p>
+              )}
+
+{/* Prescription Fulfillment Actions (When In Stock / Low Stock) */}
+              {(selectedPharmacy.latest_status === 'in_stock' || selectedPharmacy.latest_status === 'low_stock') && (
+                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-900">
+                      Fulfill Prescription
+                    </span>
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                      Stock Reported Available
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Secure your script before driving in by calling or uploading through their dispensary portal:
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {/* Call to Reserve Button */}
+                    {selectedPharmacy.phone ? (
+                      <a
+                        href={`tel:${selectedPharmacy.phone.replace(/\s+/g, '')}`}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
+                      >
+                        <span>📞</span> Call & Hold
+                      </a>
+                    ) : (
+                      <button
+                        disabled
+                        className="flex items-center justify-center gap-1 rounded-xl bg-slate-200 py-2 text-xs font-medium text-slate-400 cursor-not-allowed"
+                      >
+                        Phone Unavailable
+                      </button>
+                    )}
+
+                    {/* Official Portal Button */}
+                    {getPharmacyPortalUrl(selectedPharmacy.pharmacy_name) ? (
+                      <a
+                        href={getPharmacyPortalUrl(selectedPharmacy.pharmacy_name)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-blue-600 active:scale-[0.98]"
+                      >
+                        <span>🌐</span> Official Portal
+                      </a>
+                    ) : (
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(
+                          selectedPharmacy.pharmacy_name + ' dispensary e-script upload'
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+                      >
+                        <span>🔍</span> Find Portal
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Token Quick Copy Helper */}
+                  <div className="mt-2.5 pt-2 border-t border-emerald-100">
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                      Quick e-Script Token / QR link copy:
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Paste SMS script token or URL here..."
+                        value={tokenInput}
+                        onChange={(e) => setTokenInput(e.target.value)}
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCopyToken}
+                        className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-white transition hover:bg-slate-900 active:scale-95"
+                      >
+                        {copiedToken ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Report Stock Button */}
